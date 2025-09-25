@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="ta">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>வாய்ப்பாடு Quiz — கணக்கு பயிற்சி</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-gradient:linear-gradient(135deg,#90caf9,#42a5f5);
+  --card:#ffffffaa;
+  --accent:#42a5f5;
+  --accent2:#90caf9;
+  --muted:#555555;
+  --correct:#66bb6a;
+  --wrong:#ef5350;
+  --glass:rgba(255,255,255,0.5);
+  --shadow:0 10px 30px rgba(0,0,0,0.15);
+  --font:'Noto Sans Tamil', sans-serif;
+}
+*{box-sizing:border-box;}
+body,html{
+  margin:0; padding:0;
+  font-family:var(--font);
+  background:var(--bg-gradient);
+  color:#111;
+  min-height:100vh;
+}
+.wrap{max-width:720px;margin:30px auto;padding:16px;}
+header{text-align:center;margin-bottom:28px;color:#fff;}
+h1{font-size:1.8rem;margin-bottom:8px;}
+p.lead{font-size:1rem;line-height:1.6rem;opacity:0.9;}
+.card{
+  background:var(--card);
+  border-radius:24px;
+  padding:28px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(15px);
+  transition:0.3s;
+}
+.card:hover{
+  transform:translateY(-5px);
+  box-shadow:0 14px 35px rgba(0,0,0,0.2);
+}
+.controls{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:26px;}
+label{font-size:0.95rem;color:var(--muted);display:block;margin-bottom:6px;}
+select,input[type=number]{
+  padding:14px;
+  border-radius:16px;
+  border:1px solid #ccc;
+  font-size:1rem;
+  width:100%;
+  transition:0.3s;
+}
+select:focus,input[type=number]:focus{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 8px var(--accent2);
+}
+button{
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border:none;
+  padding:14px 22px;
+  border-radius:18px;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  transition:all 0.25s;
+}
+button:hover{transform:scale(1.05);filter:brightness(1.15);}
+.questionRow{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:20px;}
+.question{font-size:2.2rem;font-weight:700;}
+.tamil-word{font-size:1.15rem;color:var(--muted);}
+.answerRow{display:flex;gap:14px;margin-top:22px;flex-wrap:wrap;}
+input.answer{flex:1;padding:16px;border-radius:18px;border:1px solid #ccc;font-size:1rem;font-weight:700;transition:0.3s;}
+input.answer:focus{outline:none;border-color:var(--accent);box-shadow:0 0 8px var(--accent2);}
+.status{margin-top:18px;font-weight:700;font-size:0.95rem;color:var(--muted);}
+.scoreBoard{display:flex;gap:18px;align-items:center;margin-top:20px;flex-wrap:wrap;}
+.pill{background:var(--glass);padding:12px 18px;border-radius:999px;font-weight:700;font-size:0.95rem;text-align:center;backdrop-filter:blur(10px);transition:0.3s;}
+.correct-anim{animation:pop 0.35s ease forwards;}
+.wrong-anim{animation:shake 0.35s ease forwards;}
+@keyframes pop{0%{transform:scale(1);}50%{transform:scale(1.3);}100%{transform:scale(1);}}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}50%{transform:translateX(6px);}75%{transform:translateX(-4px);}}
+footer{margin-top:32px;color:#fff;opacity:0.85;text-align:center;}
+@media(max-width:480px){.question{font-size:1.7rem;}input.answer{font-size:0.9rem;}button{padding:12px 16px;font-size:0.95rem;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1> All கணக்கு பயிற்சி</h1>
+<p class="lead"> தேர்ந்தெடு: பெருக்கல்/கூட்டல்/கழித்தல்/வகுத்தல். "Random கேள்வி" அழுத்த — பதில் சொல்லு — சரியா என்றால் அடுத்தது தானாக வரும்!</p>
+</header>
+
+<div class="card">
+<div class="controls">
+  <div style="flex:1;">
+    <label>வாய்ப்பாடு தேர்வு</label>
+    <select id="opSelect">
+      <option value="mul">பெருக்கல் (×)</option>
+      <option value="add">கூட்டல் (+)</option>
+      <option value="sub">கழித்தல் (−)</option>
+      <option value="div">வகுத்தல் (÷)</option>
+    </select>
+  </div>
+  <div style="flex:1;">
+    <label>அளவீடு வரை (Max)</label>
+    <input type="number" id="maxN" min="2" max="50" value="16" />
+  </div>
+  <div style="display:flex;align-items:flex-end">
+    <button id="randBtn">Random கேள்வி</button>
+  </div>
+</div>
+
+<div id="questionArea">
+  <div class="questionRow">
+    <div>
+      <div class="question" id="qText">---</div>
+      <div class="tamil-word" id="qTamil">---</div>
+    </div>
+    <div style="text-align:right">
+      <div class="small">மொத்தம்:</div>
+      <div class="pill" id="attempts">0</div>
+    </div>
+  </div>
+
+  <div class="answerRow">
+    <input class="answer" id="answerInput" type="text" placeholder="உன் பதிலை இங்கே தமிழ் அல்லது எண்களால் எழுது" />
+    <button id="checkBtn">சரி பார்க்க</button>
+    <button id="skipBtn" style="background:rgba(0,0,0,0.12);color:var(--accent)">Skip</button>
+  </div>
+
+  <div class="status" id="status">Score: <span id="score">0</span> | சரியாக: <span id="correctCount">0</span></div>
+
+  <div class="scoreBoard">
+    <div class="pill">Score <strong id="scoreBadge">0</strong></div>
+    <div class="pill">சரி பதில்கள் <strong id="correctBadge">0</strong></div>
+    <div class="pill">தவறியவை <strong id="wrongBadge">0</strong></div>
+  </div>
+</div>
+</div>
+
+<footer> © 2025 Copy Righted | Mathavan.</footer>
+</div>
+
+<script>
+// தமிழ் எண்கள்
+const tamilNums = ["பூஜ்யம்","ஒன்று","இரண்டு","மூன்று","நான்கு","ஐந்து","ஆறு","ஏழு","எட்டு","ஒன்பது","பத்து","பதினொன்று","பனிரண்டு","பதிமூன்று","பதினான்கு","பதினைந்து","பதினாறு","பதினேழு","பதினெட்டு","பத்தொன்பது","இருபது"];
+
+const opSelect = document.getElementById('opSelect');
+const randBtn = document.getElementById('randBtn');
+const qText = document.getElementById('qText');
+const qTamil = document.getElementById('qTamil');
+const answerInput = document.getElementById('answerInput');
+const checkBtn = document.getElementById('checkBtn');
+const skipBtn = document.getElementById('skipBtn');
+const scoreEl = document.getElementById('score');
+const attemptsEl = document.getElementById('attempts');
+const correctBadge = document.getElementById('correctBadge');
+const wrongBadge = document.getElementById('wrongBadge');
+const maxNInput = document.getElementById('maxN');
+
+let current=null, score=0, attempts=0, correct=0, wrong=0;
+
+function numToTamil(n){ return (n>=0 && n<tamilNums.length)?tamilNums[n]:n.toString(); }
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min }
+
+function generateQuestion(){
+  const op=opSelect.value;
+  const maxN=Math.max(2, Math.min(50, parseInt(maxNInput.value)||16));
+  let a=randInt(1,maxN), b=randInt(1,maxN);
+
+  if(op==='div'){
+    const ans=randInt(1,maxN);
+    const factor=randInt(1, Math.max(1, Math.floor(maxN/ans)));
+    a = ans*factor;
+    b = ans;
+  }
+
+  let text='', tamilText='', answer=null;
+  if(op==='mul'){ text=`${a} × ${b} = ?`; tamilText=`${numToTamil(a)} × ${numToTamil(b)} = ?`; answer=a*b; }
+  if(op==='add'){ text=`${a} + ${b} = ?`; tamilText=`${numToTamil(a)} + ${numToTamil(b)} = ?`; answer=a+b; }
+  if(op==='sub'){ text=`${a} − ${b} = ?`; tamilText=`${numToTamil(a)} − ${numToTamil(b)} = ?`; answer=a-b; }
+  if(op==='div'){ text=`${a} ÷ ${b} = ?`; tamilText=`${numToTamil(a)} ÷ ${numToTamil(b)} = ?`; answer=Math.floor(a/b); }
+
+  current={a,b,op,answer};
+  qText.textContent=text;
+  qTamil.textContent=tamilText;
+  answerInput.value='';
+  answerInput.focus();
+}
+
+function normalizeAnswer(inp){
+  if(!inp) return null;
+  inp=inp.toString().trim();
+  const num=Number(inp.replace(/[^0-9-]/g,''));
+  if(!isNaN(num) && inp.match(/[0-9]/)) return num;
+  const clean=inp.replace(/\s+/g,'');
+  for(let i=0;i<tamilNums.length;i++){ if(tamilNums[i]===clean || tamilNums[i]===inp) return i; }
+  return null;
+}
+
+function checkAnswer(){
+  if(!current) return;
+  const val=normalizeAnswer(answerInput.value);
+  attempts++; attemptsEl.textContent=attempts;
+  if(val===current.answer){
+    score+=10; correct++;
+    scoreEl.textContent=score; correctBadge.textContent=correct;
+    qText.classList.add('correct-anim');
+    setTimeout(()=>{ qText.classList.remove('correct-anim'); generateQuestion(); },600);
+  } else {
+    wrong++; wrongBadge.textContent=wrong;
+    qText.classList.add('wrong-anim');
+    const prev=qText.textContent;
+    qText.textContent=prev+' → பதில்: '+current.answer;
+    setTimeout(()=>{ qText.classList.remove('wrong-anim'); qText.textContent=prev; generateQuestion(); },900);
+  }
+}
+
+randBtn.addEventListener('click',generateQuestion);
+checkBtn.addEventListener('click',checkAnswer);
+skipBtn.addEventListener('click',()=>{ attempts++; attemptsEl.textContent=attempts; generateQuestion(); });
+answerInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter') checkAnswer(); });
+window.addEventListener('load',generateQuestion);
+</script>
+</body>
+</html>
