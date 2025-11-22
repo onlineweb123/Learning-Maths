@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Multiplication Tables 1-20 (Background Enabled)</title>
+<title>Multiplication Tables 1-20 (Reverse Order)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap" rel="stylesheet">
 <style>
   body {
@@ -16,33 +16,8 @@
   }
   h1 {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
   }
-  /* புதிய கட்டுப்பாடு பகுதி ஸ்டைல் */
-  .controls {
-      text-align: center;
-      margin-bottom: 30px;
-      padding: 10px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.1);
-  }
-  .toggle-btn {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 25px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background-color 0.3s, color 0.3s;
-  }
-  .toggle-off {
-      background-color: #f44336; /* சிவப்பு */
-      color: white;
-  }
-  .toggle-on {
-      background-color: #4CAF50; /* பச்சை */
-      color: white;
-  }
-  /* அட்டவணை ஸ்டைல்ஸ் (மாற்றமில்லை) */
   .tables {
     display: grid;
     grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
@@ -96,67 +71,13 @@
 
 <h1>Multiplication Tables 1-20</h1>
 
-<div class="controls">
-    <button id="wakeLockToggle" class="toggle-btn toggle-off">
-        🎶 திரைக்குப் பின்னால் பேச: OFF
-    </button>
-    <p style="font-size:12px; color: #ccc; margin-top: 5px;">(இந்த வசதி திரையை அணைக்காமல்/மங்காமல் தடுக்கும்.)</p>
-</div>
 <div class="tables" id="tablesContainer">
-</div>
+  </div>
 
 <script>
 const container = document.getElementById('tablesContainer');
 const speechSynthesis = window.speechSynthesis;
-const wakeLockToggle = document.getElementById('wakeLockToggle');
-
 let tamilVoice = null;
-let wakeLock = null; // Wake Lock API-ஐ சேமிக்க
-
-// --- Wake Lock செயல்பாடுகள் ---
-async function requestWakeLock() {
-    if ('wakeLock' in navigator && !wakeLock) {
-        try {
-            wakeLock = await navigator.wakeLock.request('screen');
-            wakeLockToggle.textContent = '🎶 திரைக்குப் பின்னால் பேச: ON';
-            wakeLockToggle.classList.remove('toggle-off');
-            wakeLockToggle.classList.add('toggle-on');
-            // திரை பூட்டப்பட்டால்/வெளியேறினால் அது தானாகவே Wake Lock-ஐ நீக்கிவிடும், அதை மீண்டும் கேட்க இந்த நிகழ்வை (Event) அமைக்கிறோம்.
-            wakeLock.addEventListener('release', () => {
-                console.log('Wake Lock released by system.');
-                wakeLock = null;
-                // UI-ஐ மீண்டும் OFF நிலைக்கு மாற்றுகிறோம்
-                wakeLockToggle.textContent = '🎶 திரைக்குப் பின்னால் பேச: OFF';
-                wakeLockToggle.classList.remove('toggle-on');
-                wakeLockToggle.classList.add('toggle-off');
-            });
-            console.log('Wake Lock acquired.');
-        } catch (err) {
-            console.error(`${err.name}, ${err.message}`);
-        }
-    }
-}
-
-function releaseWakeLock() {
-    if (wakeLock) {
-        wakeLock.release();
-        wakeLock = null; // release-க்குப் பிறகு இது null ஆகிவிடும்
-        wakeLockToggle.textContent = '🎶 திரைக்குப் பின்னால் பேச: OFF';
-        wakeLockToggle.classList.remove('toggle-on');
-        wakeLockToggle.classList.add('toggle-off');
-        console.log('Wake Lock released manually.');
-    }
-}
-
-wakeLockToggle.addEventListener('click', () => {
-    if (wakeLock) {
-        releaseWakeLock();
-    } else {
-        requestWakeLock();
-    }
-});
-
-// --- Speech Synthesis செயல்பாடுகள் (மாற்றமில்லை) ---
 
 // 1. குரல் அமைப்புகளைத் தயார்ப்படுத்துதல்
 function setTamilVoice() {
@@ -176,7 +97,7 @@ function speakTable(tableNumber) {
     speechSynthesis.cancel();
     let textToSpeak = "";
     
-    // இங்கே பேசும் உரையின் வரிசை: j பெருக்கல் tableNumber
+    // இங்கே பேசும் உரையின் வரிசை மாற்றப்பட்டுள்ளது: j பெருக்கல் tableNumber
     for(let j=1; j<=20; j++){ 
         textToSpeak += `${j} பெருக்கல் ${tableNumber} சமம் ${tableNumber * j}. `;
     }
@@ -201,7 +122,7 @@ for(let i=1; i<=20; i++){
   const ul = document.createElement('ul');
   for(let j=1; j<=20; j++){
     const li = document.createElement('li');
-    // இங்கே பட்டியலின் வரிசை: j × i
+    // இங்கே பட்டியலின் வரிசை மாற்றப்பட்டுள்ளது: j × i
     li.textContent = `${j} × ${i} = ${i*j}`;
     ul.appendChild(li);
   }
