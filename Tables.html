@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -91,14 +92,14 @@ function setTamilVoice() {
 }
 setTamilVoice();
 
-// 2. பேசுவதற்கான செயல்பாட்டுக் குறியீடு (Speech Function)
+// 2. பேசுவதற்கான செயல்பாட்டுக் குறியீடு (Speech Function) - இங்கே மாற்றம் செய்யப்பட்டுள்ளது
 function speakTable(tableNumber) {
     speechSynthesis.cancel();
     let textToSpeak = "";
     
-    // இங்கே பேசும் உரையின் வரிசை மாற்றப்பட்டுள்ளது: j பெருக்கல் tableNumber
+    // 'சமம்' என்ற வார்த்தை நீக்கப்பட்டுள்ளது
     for(let j=1; j<=20; j++){ 
-        textToSpeak += `${j} பெருக்கல் ${tableNumber} சமம் ${tableNumber * j}. `;
+        textToSpeak += `${j} பெருக்கல் ${tableNumber} ${tableNumber * j}. `;
     }
 
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
