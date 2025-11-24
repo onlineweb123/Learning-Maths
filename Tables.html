@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -64,6 +65,45 @@
   .speech-btn:hover {
     background: #00a0b2;
   }
+  
+  <!-- Loop  -->
+  
+    /* Loop Button ஸ்டைலுக்கான குறியீடு */
+  .button-group {
+    display: flex; /* பொத்தான்களை ஒரு வரிசையில் வைக்க */
+    gap: 5px; /* பொத்தான்களுக்கு இடையே இடைவெளி */
+    margin-top: 10px;
+  }
+  .loop-btn {
+    flex-grow: 1; /* பொத்தானை சமமாக விரியச் செய்ய */
+    padding: 8px;
+    border: none;
+    border-radius: 10px;
+    background: #ff9800; /* ஆரஞ்சு நிறம் */
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-size: 18px; /* 🔁 சின்னம் பெரியதாகத் தெரிய */
+  }
+  .loop-btn:hover {
+    background: #fb8c00;
+  }
+  .loop-on {
+    background: #4caf50; /* Loop ON ஆனதும் பச்சை நிறம் */
+  }
+  .loop-on:hover {
+    background: #43a047;
+  }
+  /* Speech பொத்தான் இப்போது ஒரு பகுதியையே எடுத்துக்கொள்ளும் */
+  .speech-btn {
+    flex-grow: 3; /* இது Loop பொத்தானை விடப் பெரியதாக இருக்க */
+  }
+
+  
+  <!-- Loop -->
+  
+  
 </style>
 </head>
 <body>
@@ -74,9 +114,15 @@
   </div>
 
 <script>
+
+
 const container = document.getElementById('tablesContainer');
 const speechSynthesis = window.speechSynthesis;
 let tamilVoice = null;
+
+// Global நிலை: ஒரு நேரத்தில் ஒரு Loop மட்டுமே இயக்கப்பட வேண்டும்
+let currentLoopedTable = null; // தற்போது எந்த அட்டையை Loop செய்கிறது
+let utterance = null; // தற்போது பேசும் SpeechSynthesisUtterance ஆப்ஜெக்ட்
 
 // 1. குரல் அமைப்புகளைத் தயார்ப்படுத்துதல்
 function setTamilVoice() {
@@ -91,33 +137,90 @@ function setTamilVoice() {
 }
 setTamilVoice();
 
-// 2. பேசுவதற்கான செயல்பாட்டுக் குறியீடு (Speech Function) - இங்கே மாற்றம் செய்யப்பட்டுள்ளது
-function speakTable(tableNumber) {
-    speechSynthesis.cancel();
-    let textToSpeak = "";
+// 2. பேசுவதற்கான செயல்பாட்டுக் குறியீடு (Speech Function) - Loop மாற்றங்களுடன்
+function speakTable(tableNumber, isLooping = false) {
+    // ஏற்கெனவே பேசிக்கொண்டிருந்தால் நிறுத்துகிறது
+    speechSynthesis.cancel(); 
+
+    // Loop-ல் இல்லை என்றால், தற்போதைய Loop-ஐ நிறுத்தவும்
+    if (!isLooping && currentLoopedTable) {
+        stopLoop(currentLoopedTable);
+    }
     
+    let textToSpeak = "";
     // 'சமம்' என்ற வார்த்தை நீக்கப்பட்டுள்ளது
     for(let j=1; j<=20; j++){ 
         textToSpeak += `${j} பெருக்கல் ${tableNumber} ${tableNumber * j}. `;
     }
 
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    // புதிய Utterance ஆப்ஜெக்ட்டை உருவாக்கவும்
+    utterance = new SpeechSynthesisUtterance(textToSpeak);
     utterance.lang = 'ta-IN'; 
     if (tamilVoice) {
         utterance.voice = tamilVoice;
     } 
+
+    // Loop செய்யும் லாஜிக்
+    if (isLooping) {
+        utterance.onend = () => {
+            // பேச்சு முடிந்ததும், அது Loop ஆக இருந்தால், மீண்டும் பேச ஆரம்பிக்கவும்
+            if (currentLoopedTable === tableNumber) {
+                speakTable(tableNumber, true);
+            }
+        };
+    } else {
+        // Loop இல்லையெனில், முடிந்ததும் onend நிகழ்வை நீக்குக
+        utterance.onend = null;
+    }
+    
+    // பேச ஆரம்பிக்கிறது
     speechSynthesis.speak(utterance);
+}
+
+// Loop-ஐத் தொடங்கும்/நிறுத்தும் செயல்பாடு
+function toggleLoop(tableNumber, buttonElement) {
+    if (currentLoopedTable === tableNumber) {
+        // Loop ஏற்கனவே ON-ல் உள்ளது, இப்போது OFF செய்யவும்
+        stopLoop(tableNumber);
+    } else {
+        // Loop OFF-ல் உள்ளது, இப்போது ON செய்யவும்
+        
+        // வேறு ஏதேனும் Loop ON-ல் இருந்தால், அதை முதலில் OFF செய்யவும்
+        if (currentLoopedTable) {
+            const oldLoopBtn = document.querySelector(`.loop-btn[data-table-number="${currentLoopedTable}"]`);
+            if (oldLoopBtn) {
+                oldLoopBtn.classList.remove('loop-on');
+            }
+            speechSynthesis.cancel();
+        }
+
+        // புதிய Loop-ஐ ON செய்யவும்
+        currentLoopedTable = tableNumber;
+        buttonElement.classList.add('loop-on');
+        speakTable(tableNumber, true); // Loop-ஐ ஆரம்பிக்கிறது
+    }
+}
+
+// Loop-ஐ நிறுத்தும் செயல்பாடு
+function stopLoop(tableNumber) {
+    currentLoopedTable = null;
+    speechSynthesis.cancel(); // தற்போதைய பேச்சை நிறுத்துகிறது
+    
+    const loopBtn = document.querySelector(`.loop-btn[data-table-number="${tableNumber}"]`);
+    if (loopBtn) {
+        loopBtn.classList.remove('loop-on');
+    }
 }
 
 // 3. HTML வாய்ப்பாடுகளை உருவாக்குவது மற்றும் பொத்தானைச் சேர்ப்பது
 for(let i=1; i<=20; i++){
   const card = document.createElement('div');
   card.classList.add('table-card');
-  
+
   const h2 = document.createElement('h2');
   h2.textContent = `Table of ${i}`;
   card.appendChild(h2);
-  
+
   const ul = document.createElement('ul');
   for(let j=1; j<=20; j++){
     const li = document.createElement('li');
@@ -125,18 +228,52 @@ for(let i=1; i<=20; i++){
     li.textContent = `${j} × ${i} = ${i*j}`;
     ul.appendChild(li);
   }
-  
+
   card.appendChild(ul);
   
-  // Speech பொத்தானைச் சேர்க்கிறோம்
+  // *** புதிய பொத்தான் குழுமம் (Button Group) ***
+  const buttonGroup = document.createElement('div');
+  buttonGroup.classList.add('button-group');
+
+  // 1. Loop பொத்தானைச் சேர்க்கிறோம் (🔁)
+  const loopButton = document.createElement('button');
+  loopButton.classList.add('loop-btn');
+  loopButton.setAttribute('data-table-number', i); // எந்த வாய்ப்பாட்டுக்கானது என்று குறிக்க
+  loopButton.textContent = '🔁';
+  loopButton.addEventListener('click', () => toggleLoop(i, loopButton)); 
+  
+  buttonGroup.appendChild(loopButton);
+
+  // 2. Speech பொத்தானைச் சேர்க்கிறோம் (🗣️)
   const speakButton = document.createElement('button');
   speakButton.classList.add('speech-btn');
   speakButton.textContent = `🗣️ வாய்ப்பாடு ${i} படிக்க`;
-  speakButton.addEventListener('click', () => speakTable(i)); 
+  // Loop ON இல்லாவிட்டாலோ அல்லது வேறு Loop ON-ல் இருந்தாலோ சாதாரண பேச்சை இயக்குகிறது
+  speakButton.addEventListener('click', () => {
+    // வேறு Loop ON-ல் இருந்தால் அதை OFF செய்க
+    if (currentLoopedTable && currentLoopedTable !== i) {
+        stopLoop(currentLoopedTable);
+    }
+    // சாதாரண பேச்சை இயக்குகிறது (Loop இல்லை)
+    speakTable(i, false); 
+  }); 
+
+  buttonGroup.appendChild(speakButton);
   
-  card.appendChild(speakButton);
+  // Button Group-ஐ அட்டையில் சேர்க்கிறோம்
+  card.appendChild(buttonGroup);
+  
   container.appendChild(card);
 }
+
+
+
+
+
+
+
+
+
 </script>
 
 </body>
